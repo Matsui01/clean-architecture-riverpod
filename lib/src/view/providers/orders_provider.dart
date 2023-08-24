@@ -1,31 +1,37 @@
 import 'dart:async';
 
-import 'package:clean_architecture_riverpod/src/view/providers/base/base_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/order.dart';
 import '../../domain/repositories/order_repository.dart';
+import '../../provider.dart';
 import 'base/base_state.dart';
 
-class OrdersProvider extends BaseProvider {
+final orderProvider = StateNotifierProvider<OrdersProvider, BaseState>((ref) {
+  final repository = ref.watch(orderRepositoryProvider);
+  return OrdersProvider(repository);
+});
+
+class OrdersProvider extends StateNotifier<BaseState> {
   final OrderRepository _orderRepository;
 
-  OrdersProvider(this._orderRepository) : super(state: StateSuccess());
+  OrdersProvider(this._orderRepository) : super(StateSuccess());
 
   Future<void> getOrders() async {
-    setScreenState(StateLoading());
-    setScreenState(await _getOrders());
+    state = StateLoading();
+    state = await _getOrders();
   }
 
   Future<void> removeOrder({required Order order}) async {
-    setScreenState(StateLoading());
+    state = StateLoading();
     await _orderRepository.removeOrder(order);
-    setScreenState(await _getOrders());
+    state = await _getOrders();
   }
 
   Future<void> saveOrder({required Order order}) async {
-    setScreenState(StateLoading());
+    state = StateLoading();
     await _orderRepository.saveOrder(order);
-    setScreenState(await _getOrders());
+    state = await _getOrders();
   }
 
   Future<BaseState> _getOrders() async {

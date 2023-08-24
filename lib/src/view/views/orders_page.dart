@@ -1,25 +1,25 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:clean_architecture_riverpod/src/view/providers/base/base_state.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/order.dart';
 import '../providers/orders_provider.dart';
 
 @RoutePage()
-class OrdersPage extends StatefulWidget {
+class OrdersPage extends ConsumerStatefulWidget {
   const OrdersPage({super.key});
 
   @override
-  State<OrdersPage> createState() => _OrdersPageState();
+  ConsumerState<OrdersPage> createState() => _OrdersPageState();
 }
 
-class _OrdersPageState extends State<OrdersPage> {
+class _OrdersPageState extends ConsumerState<OrdersPage> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      context.read<OrdersProvider>().getOrders();
+      ref.read(orderProvider.notifier).getOrders();
     });
   }
 
@@ -31,14 +31,15 @@ class _OrdersPageState extends State<OrdersPage> {
         label: const Text('Pedido'),
         icon: const Icon(Icons.add),
         onPressed: () {
-          context.read<OrdersProvider>().saveOrder(
+          ref.read(orderProvider.notifier).saveOrder(
                 order: const Order(description: 'Pedido'),
               );
         },
       ),
-      body: Builder(
-        builder: (context) {
-          BaseState state = context.watch<OrdersProvider>().state;
+      body: Consumer(
+        builder: (context, ref, child) {
+          BaseState state = ref.watch(orderProvider);
+          // BaseState state = ref.watch(OrdersProvider).state;
           switch (state.runtimeType) {
             case StateSuccess:
               if (state.data is List<Order>) {
@@ -59,7 +60,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
   Widget _buildOrders(List<Order> orders) {
     return RefreshIndicator(
-      onRefresh: () => context.read<OrdersProvider>().getOrders(),
+      onRefresh: () => ref.read(orderProvider.notifier).getOrders(),
       child: ListView.builder(
         itemCount: orders.length,
         itemBuilder: (context, index) {
@@ -68,7 +69,7 @@ class _OrdersPageState extends State<OrdersPage> {
             onTap: () {},
             leading: IconButton(
               icon: const Icon(Icons.delete),
-              onPressed: () => context.read<OrdersProvider>().removeOrder(order: orders[index]),
+              onPressed: () => ref.read(orderProvider.notifier).removeOrder(order: orders[index]),
             ),
           );
         },
